@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: object-storage-manager-prod-service
+  labels:
+    app: object-storage-manager-prod
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.24.24.114
+  externalIPs:
+  - 10.24.24.114
+  ports:
+  - name: http
+    port: 81 #local out port
+    protocol: TCP
+    targetPort: 81 # container port
+  selector:
+    app: object-storage-manager-prod #find all pod with app name
+  sessionAffinity: None

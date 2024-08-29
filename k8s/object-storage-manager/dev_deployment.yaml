@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: object-storage-manager-dev-deployment
+  namespace: object-storage-manager-dev
+  labels:
+    app: object-storage-manager-dev
+spec:
+  selector:
+    matchLabels:
+      app: object-storage-manager-dev
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: object-storage-manager-dev
+    spec:
+      containers:
+      - name: object-storage-manager-dev
+        image: vincentbuiwork/object-storage-manager:dev
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: 500M
+          limits:
+            memory: 1Gi
+        livenessProbe:
+          tcpSocket:
+            port: 83
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /_status/healthz
+            port: 83
+          initialDelaySeconds: 5
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 10
+        ports:
+        - containerPort: 83
+      restartPolicy: Always
