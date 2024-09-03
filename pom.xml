@@ -127,6 +127,12 @@
 		 </dependency>
 
 		<!-- Database -->
+
+		<dependency>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>8.5.12</version>
+		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
 		<dependency>
@@ -139,7 +145,7 @@
 		<dependency>
 			<groupId>com.vincent.inc</groupId>
 			<artifactId>vies-spring-utils</artifactId>
-			<version>2.7.1</version>
+			<version>2.7.4</version>
 		</dependency>
 
 		<dependency>

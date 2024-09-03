@@ -1,3 +1,3 @@
-spring.cloud.vault.token: hvs.CAESIDm3jDDwRselNnGVJ6kKOFQkbHKZ-YuNATnV22hwKxdTGh4KHGh2cy4xdm9tczBneHhld21pUDFhZjBWNjVBMkw
+spring.cloud.vault.token: hvs.CAESIBus0PHxPy3yEmSKWt2sHa1A0zDjqHvGqRBxsXXX50y-Gh4KHGh2cy5ERDVyMGtyaDFEREh3Z3oyMGJzZ2tpVXU
 
 spring.profiles.active: local
