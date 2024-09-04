@@ -1,8 +1,5 @@
 package com.viescloud.llc.object_storage_manager.model;
 
-import com.vincent.inc.viesspringutils.model.UserAccess;
-
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,12 +16,9 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-public class S3FileMetaData extends UserAccess {
+public class S3FileMetaData extends ObjectStorageData {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
-    @Column
-    private String data;
 }
