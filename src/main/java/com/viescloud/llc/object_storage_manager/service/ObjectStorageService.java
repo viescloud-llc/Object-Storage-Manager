@@ -264,8 +264,10 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
 
     @Override
     protected T processingGetOutput(T object) {
-        var data = this.readRawOnStorage(object.getPath());
-        object.setData(data);
+        if(!ObjectUtils.isEmpty(object)) {
+            var data = this.readRawOnStorage(object.getPath());
+            object.setData(data);
+        }
         return object;
     }
 
