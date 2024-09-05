@@ -245,7 +245,7 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
 
     @Override
     public boolean isRelatedToUser(T fileMetaData, int userId, List<UserPermissionEnum> userPermissions) {
-        if(fileMetaData.getPublicity() != null && fileMetaData.getPublicity() == true && (userPermissions == null ||userPermissions.contains(UserPermissionEnum.READ)))
+        if(fileMetaData.getPublicity() != null && fileMetaData.getPublicity() == true && (userPermissions == null || userPermissions.contains(UserPermissionEnum.READ)))
             return true;
         else
             return super.isRelatedToUser(fileMetaData, userId, userPermissions);
