@@ -13,6 +13,7 @@ import org.springframework.util.ObjectUtils;
 import com.viescloud.llc.object_storage_manager.dao.ObjectStorageDao;
 import com.viescloud.llc.object_storage_manager.model.ObjectStorageData;
 import com.vincent.inc.viesspringutils.exception.HttpResponseThrowers;
+import com.vincent.inc.viesspringutils.model.UserPermissionEnum;
 import com.vincent.inc.viesspringutils.service.ViesServiceWithUserAccess;
 import com.vincent.inc.viesspringutils.util.DatabaseCall;
 import com.vincent.inc.viesspringutils.util.ReflectionUtils;
@@ -243,11 +244,13 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
     }
 
     @Override
-    public boolean isRelatedToUser(T fileMetaData, int userId) {
-        return (fileMetaData.getPublicity() != null && fileMetaData.getPublicity() == true) || super.isRelatedToUser(fileMetaData, userId);
-    }
+    public boolean isRelatedToUser(T fileMetaData, int userId, List<UserPermissionEnum> userPermissions) {
+        if(fileMetaData.getPublicity() != null && fileMetaData.getPublicity() == true && (userPermissions == null ||userPermissions.contains(UserPermissionEnum.READ)))
+            return true;
+        else
+            return super.isRelatedToUser(fileMetaData, userId, userPermissions);
 
-    
+    }
 
     public String getDirectoryPathFromFilePath(String filePath) {
         List<String> splits = Arrays.stream(filePath.split("/")).toList();
