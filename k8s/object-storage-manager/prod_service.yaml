@@ -6,9 +6,9 @@ metadata:
     app: object-storage-manager-prod
 spec:
   type: LoadBalancer
-  loadBalancerIP: 10.24.24.115
+  loadBalancerIP: 10.24.24.116
   externalIPs:
-  - 10.24.24.115
+  - 10.24.24.116
   ports:
   - name: http
     port: 81 #local out port
