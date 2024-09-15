@@ -205,7 +205,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         if(ObjectUtils.isEmpty(user_id))
             HttpResponseThrowers.throwUnauthorized("Unauthorized");
         this.validateInput(id, path, fileName);
-        T metadata = this.objectStorageService.getFileMetaDataByCriteria(id, path, fileName, user_id);
+        T metadata = this.objectStorageService.getFileByCriteria(id, path, fileName, user_id);
         if (ObjectUtils.isEmpty(metadata))
             HttpResponseThrowers.throwBadRequest("No file metadata found");
         this.objectStorageService.checkIsRelatedToUser(metadata, user_id, List.of(UserPermissionEnum.WRITE));
@@ -215,6 +215,8 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         fileMetaData.setInputUserId(user_id);
         fileMetaData.setOwnerUserId(metadata.getOwnerUserId());
         fileMetaData.setSharedUsers(metadata.getSharedUsers());
+        if(metadata.getSize() == fileMetaData.getSize() && metadata.getData().equals(fileMetaData.getData()))
+            return metadata;
         var result = this.objectStorageService.put((I) ReflectionUtils.getIdFieldValue(metadata), fileMetaData);
         this.objectStorageService.replaceOnStorage(fileMetaData.getData(), fileMetaData.getPath());
         return result;
