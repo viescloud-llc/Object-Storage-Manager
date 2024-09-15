@@ -269,6 +269,7 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
     @Override
     protected T processingGetOutput(T object) {
         if(!ObjectUtils.isEmpty(object)) {
+            //TODO: Add check if file exist on storage and if not remove from database and return 404
             var data = this.readRawOnStorage(object.getPath());
             object.setData(data);
         }
