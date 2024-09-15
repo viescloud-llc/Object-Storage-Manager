@@ -32,6 +32,7 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
     protected abstract byte[] readRawOnStorage(String path);
     protected abstract boolean isFileExistOnStorage(String path);
     protected abstract void writeOnStorage(byte[] data, String path);
+    public abstract void replaceOnStorage(byte[] data, String path);
 
     protected String getRemoveFilePath() {
         return "/Trash";
@@ -292,5 +293,14 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         return object;
     }
 
-    
+    @Override
+    protected T processingPutInput(I id, T input) {
+        if (ObjectUtils.isEmpty(input.getData()))
+            HttpResponseThrowers.throwBadRequest("File is empty");
+
+        if (!this.isFileExist(input.getPath()))
+            HttpResponseThrowers.throwBadRequest("File not found");
+
+        return input;
+    }
 }

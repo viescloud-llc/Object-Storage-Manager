@@ -88,4 +88,15 @@ public class SmbFileMetaDataService extends ObjectStorageService<SmbFileMetaData
             HttpResponseThrowers.throwServerError("Server experience unexpected error while writing file");
         }
     }
+
+    @Override
+    public void replaceOnStorage(byte[] data, String path) {
+        try {
+            this.smbSession.remove(path);
+            this.smbSession.write(data, path);
+        } catch (IOException ex) {
+            log.error(ex.getMessage(), ex);
+            HttpResponseThrowers.throwServerError("Server experience unexpected error while writing file");
+        }
+    }
 }

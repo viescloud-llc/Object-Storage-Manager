@@ -55,5 +55,12 @@ public class DatabaseFileMetaDataService extends ObjectStorageService<DatabaseFi
     protected DatabaseFileMetaData newEmptyObject() {
         return new DatabaseFileMetaData();
     }
+
+    @Override
+    public void replaceOnStorage(byte[] data, String path) {
+        var file = this.databaseFileDao.findByPath(path);
+        file.setData(data);
+        this.databaseFileDao.saveAndFlush(file);
+    }
     
 }

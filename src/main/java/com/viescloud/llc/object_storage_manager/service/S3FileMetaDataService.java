@@ -133,4 +133,10 @@ public class S3FileMetaDataService extends ObjectStorageService<S3FileMetaData, 
             HttpResponseThrowers.throwServerError("Server experience unexpected error when removing file");
         }
     }
+
+    @Override
+    public void replaceOnStorage(byte[] data, String path) {
+        this.removeObjectFromStorage(path);
+        this.writeOnStorage(data, path);
+    }
 }

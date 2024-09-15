@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +22,7 @@ import com.viescloud.llc.object_storage_manager.model.ObjectStorageData;
 import com.viescloud.llc.object_storage_manager.service.ObjectStorageService;
 import com.vincent.inc.viesspringutils.exception.HttpResponseThrowers;
 import com.vincent.inc.viesspringutils.model.UserPermissionEnum;
+import com.vincent.inc.viesspringutils.util.ReflectionUtils;
 
 import io.github.techgnious.IVCompressor;
 import io.github.techgnious.dto.IVSize;
@@ -188,6 +190,34 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
 
         var metadata = this.fromMultipartFile(file, user_id, file.getBytes(), publicity);
         return this.objectStorageService.post(metadata);
+    }
+
+    @SuppressWarnings("unchecked")
+    @PutMapping("file")
+    public T updateFile(
+            @RequestHeader(required = false) Integer user_id,
+            @RequestParam(required = false) String path,
+            @RequestParam(required = false) String fileName,
+            @RequestParam(required = false) I id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "publicity", required = false) Boolean publicity) throws IOException {
+
+        if(ObjectUtils.isEmpty(user_id))
+            HttpResponseThrowers.throwUnauthorized("Unauthorized");
+        this.validateInput(id, path, fileName);
+        T metadata = this.objectStorageService.getFileMetaDataByCriteria(id, path, fileName, user_id);
+        if (ObjectUtils.isEmpty(metadata))
+            HttpResponseThrowers.throwBadRequest("No file metadata found");
+        this.objectStorageService.checkIsRelatedToUser(metadata, user_id, List.of(UserPermissionEnum.WRITE));
+        var fileMetaData = this.fromMultipartFile(file, user_id, file.getBytes(), publicity);
+        if(!metadata.getPath().equals(fileMetaData.getPath()))
+            HttpResponseThrowers.throwBadRequest("Path, file name or type cannot be changed");
+        fileMetaData.setInputUserId(user_id);
+        fileMetaData.setOwnerUserId(metadata.getOwnerUserId());
+        fileMetaData.setSharedUsers(metadata.getSharedUsers());
+        var result = this.objectStorageService.put((I) ReflectionUtils.getIdFieldValue(metadata), fileMetaData);
+        this.objectStorageService.replaceOnStorage(fileMetaData.getData(), fileMetaData.getPath());
+        return result;
     }
 
     @PatchMapping("metadata")
