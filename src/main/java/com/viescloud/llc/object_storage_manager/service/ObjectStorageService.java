@@ -147,7 +147,7 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         String newPath = ObjectUtils.isEmpty(newName) ? null : String.format("/%s/%s", ownerId, newName);
         String newType = ObjectUtils.isEmpty(newName) ? null : this.getContentTypeFromPath(newPath);
 
-        if (!ObjectUtils.isEmpty(newType) && !newType.equals(originalMetadata.getContentType()))
+        if (!ObjectUtils.isEmpty(newType) && newType != null && !newType.equals(originalMetadata.getContentType()))
             HttpResponseThrowers.throwBadRequest("New type can't be difference from old type");
 
         if (!ObjectUtils.isEmpty(newName) && this.isFileExist(newPath))
@@ -165,11 +165,8 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         return this.databaseCall.saveAndExpire(originalMetadata);
     }
 
-    
-
-    @Override
-    public void delete(I id) {
-        var fileMetaData = this.getFileMetaDataById(id);
+    @SuppressWarnings("unchecked")
+    public void delete(T fileMetaData) {
         var ownerId = this.getOwnerUserIdFromPath(fileMetaData.getPath());
         var moveFilePath = String.format("%s/%s/%s", this.getRemoveFilePath(), ownerId, fileMetaData.getOriginalFilename());
         
@@ -183,7 +180,13 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         }
         
         this.moveFileOnStorage(fileMetaData.getPath(), toMoveFilePath);
-        super.delete(id);
+        super.delete((I) ReflectionUtils.getIdFieldValue(fileMetaData));
+    }
+
+    @Override
+    public void delete(I id) {
+        var fileMetaData = this.getFileMetaDataById(id);
+        this.delete(fileMetaData);
     }
 
     private String addCountToFilePath(String path, int count) {

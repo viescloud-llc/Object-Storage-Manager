@@ -254,7 +254,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         if (ObjectUtils.isEmpty(metadata))
             HttpResponseThrowers.throwBadRequest("No file metadata found");
         this.objectStorageService.checkIsRelatedToUser(metadata, user_id, List.of(UserPermissionEnum.DELETE));
-        this.objectStorageService.delete(id);
+        this.objectStorageService.delete(metadata);
     }
 
     private void validateInput(I id, String path, String fileName) {
