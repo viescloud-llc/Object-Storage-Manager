@@ -108,18 +108,17 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         if(ObjectUtils.isEmpty(imageFormat)) {
             imageFormat = Optional.ofNullable(IMAGE_FORMATS.get(metadata.getContentType().split("/")[1].toLowerCase()))
                                   .orElse(ImageFormats.JPG);
-            metadata.setContentType(String.format("image/%s", imageFormat.getType()));
         }
-
         try {
             var result = this.compressor.resizeImageWithCustomRes(metadata.getData(), imageFormat, customRes);
             metadata.setData(result);
         } 
         catch (ImageException e) {
-            e.printStackTrace();
             log.error(e.getMessage(), e);
             HttpResponseThrowers.throwServerError("Server experience unknown error when resize image");
         }
+
+        metadata.setContentType(String.format("image/%s", imageFormat.getType()));
     }
 
     private void resizeVideo(T metadata, VideoFormats videoFormat, int width, int height) {
@@ -137,17 +136,15 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
             var result = metadata.getData();
             if(currentVideoFormat != videoFormat)
                 result = this.compressor.convertVideoFormat(result, currentVideoFormat, videoFormat);
-
             result = this.compressor.reduceVideoSizeWithCustomRes(result, videoFormat, customRes);
-            
-            metadata.setContentType(String.format("video/%s", videoFormat.getType()));
             metadata.setData(result);
         } 
         catch (VideoException e) {
-            e.printStackTrace();
             log.error(e.getMessage(), e);
             HttpResponseThrowers.throwServerError("Server experience unknown error when resize video");
         }
+
+        metadata.setContentType(String.format("video/%s", videoFormat.getType()));
     }
 
     @GetMapping("metadata/all")
