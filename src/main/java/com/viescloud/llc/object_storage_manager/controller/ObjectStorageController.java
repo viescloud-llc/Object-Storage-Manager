@@ -106,8 +106,9 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         customRes.setHeight(height);
 
         if(ObjectUtils.isEmpty(imageFormat)) {
-            imageFormat = Optional.of(IMAGE_FORMATS.get(metadata.getContentType().split("/")[1].toLowerCase()))
-                                  .orElseThrow(() -> HttpResponseThrowers.throwServerErrorException("Unknown image format"));
+            imageFormat = Optional.ofNullable(IMAGE_FORMATS.get(metadata.getContentType().split("/")[1].toLowerCase()))
+                                  .orElse(ImageFormats.JPG);
+            metadata.setContentType(String.format("image/%s", imageFormat.getType()));
         }
 
         try {
@@ -126,7 +127,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         customRes.setWidth(width);
         customRes.setHeight(height);
 
-        var currentVideoFormat = Optional.of(VIDEO_FORMATS.get(metadata.getContentType().split("/")[1].toLowerCase()))
+        var currentVideoFormat = Optional.ofNullable(VIDEO_FORMATS.get(metadata.getContentType().split("/")[1].toLowerCase()))
                                          .orElseThrow(() -> HttpResponseThrowers.throwServerErrorException("Unknown video format"));
         
         if (ObjectUtils.isEmpty(videoFormat))
@@ -139,6 +140,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
 
             result = this.compressor.reduceVideoSizeWithCustomRes(result, videoFormat, customRes);
             
+            metadata.setContentType(String.format("video/%s", videoFormat.getType()));
             metadata.setData(result);
         } 
         catch (VideoException e) {
