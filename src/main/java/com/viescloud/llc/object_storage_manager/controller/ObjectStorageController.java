@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.viescloud.llc.object_storage_manager.model.ObjectStorageData;
 import com.viescloud.llc.object_storage_manager.service.ObjectStorageService;
+import com.viescloud.llc.object_storage_manager.util.ImageResizer;
 import com.vincent.inc.viesspringutils.exception.HttpResponseThrowers;
 import com.vincent.inc.viesspringutils.model.UserPermissionEnum;
 import com.vincent.inc.viesspringutils.util.ReflectionUtils;
@@ -29,7 +30,6 @@ import io.github.techgnious.dto.IVSize;
 import io.github.techgnious.dto.ImageFormats;
 import io.github.techgnious.dto.ResizeResolution;
 import io.github.techgnious.dto.VideoFormats;
-import io.github.techgnious.exception.ImageException;
 import io.github.techgnious.exception.VideoException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -101,23 +101,15 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
     }
 
     private void resizeImage(T metadata, ImageFormats imageFormat, int width, int height) {
-        IVSize customRes = new IVSize();
-        customRes.setWidth(width);
-        customRes.setHeight(height);
-
         if(ObjectUtils.isEmpty(imageFormat)) {
             imageFormat = Optional.ofNullable(IMAGE_FORMATS.get(metadata.getContentType().split("/")[1].toLowerCase()))
                                   .orElse(ImageFormats.JPG);
         }
-        try {
-            var result = this.compressor.resizeImageWithCustomRes(metadata.getData(), imageFormat, customRes);
-            metadata.setData(result);
-        } 
-        catch (ImageException e) {
-            log.error(e.getMessage(), e);
-            HttpResponseThrowers.throwServerError("Server experience unknown error when resize image");
-        }
 
+        var result = ImageResizer.resizeImage(metadata.getData(), width, height, imageFormat.getType())
+                                 .orElseThrow(() -> HttpResponseThrowers.throwServerErrorException("Failed to resize image"));
+
+        metadata.setData(result);
         metadata.setContentType(String.format("image/%s", imageFormat.getType()));
     }
 
