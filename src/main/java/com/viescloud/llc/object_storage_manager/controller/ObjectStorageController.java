@@ -47,7 +47,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
 
     protected static final Map<String, ImageFormats> IMAGE_FORMATS = Map.of(
         "png", ImageFormats.PNG,
-        "jpg", ImageFormats.JPG,
+        // "jpg", ImageFormats.JPG, //TODO: fix this format to work
         "jpeg", ImageFormats.JPEG
     );
 
@@ -72,7 +72,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
             @RequestParam(required = false) Integer height,
             @RequestParam(required = false) ResizeResolution resizeResolution,
             @RequestParam(required = false) VideoFormats videoFormat,
-            @RequestParam(required = false) ImageFormats imageFormat) {
+            @RequestParam(required = false, defaultValue = "png") String imageFormat) {
         
         if(ObjectUtils.isEmpty(user_id))
             HttpResponseThrowers.throwUnauthorized("Unauthorized");
@@ -86,8 +86,12 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         }
         
         if (!ObjectUtils.isEmpty(width) && !ObjectUtils.isEmpty(height)) {
-            if(metadata.getContentType().startsWith("image"))
-                resizeImage(metadata, imageFormat, width, height);
+            if(metadata.getContentType().startsWith("image")) {
+                var imageFormatEnum = Optional.ofNullable(IMAGE_FORMATS.get(imageFormat.toLowerCase()))
+                                              .orElse(ImageFormats.PNG);
+
+                resizeImage(metadata, imageFormatEnum, width, height);
+            }
             else if(metadata.getContentType().startsWith("video"))
                 resizeVideo(metadata, videoFormat, width, height);
         }
@@ -103,7 +107,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
     private void resizeImage(T metadata, ImageFormats imageFormat, int width, int height) {
         if(ObjectUtils.isEmpty(imageFormat)) {
             imageFormat = Optional.ofNullable(IMAGE_FORMATS.get(metadata.getContentType().split("/")[1].toLowerCase()))
-                                  .orElse(ImageFormats.JPG);
+                                  .orElse(ImageFormats.PNG);
         }
 
         var result = ImageResizer.resizeImage(metadata.getData(), width, height, imageFormat.getType())
@@ -114,6 +118,8 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
     }
 
     private void resizeVideo(T metadata, VideoFormats videoFormat, int width, int height) {
+        //TODO: resize video not supported yet
+
         IVSize customRes = new IVSize();
         customRes.setWidth(width);
         customRes.setHeight(height);
