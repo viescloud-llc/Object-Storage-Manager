@@ -6,10 +6,16 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Future;
 
 import javax.imageio.ImageIO;
 
+import com.vincent.inc.viesspringutils.util.MultiTask;
+
+import dev.failsafe.event.ExecutionAttemptedEvent;
 import io.github.techgnious.IVCompressor;
 import io.github.techgnious.dto.IVSize;
 import io.github.techgnious.dto.ImageFormats;
@@ -18,6 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ImageResizer {
+
+    private static final MultiTask<byte[]> multiTask = new MultiTask<byte[]>() {
+        @Override
+        protected byte[] getTaskResultFailBack(ExecutionAttemptedEvent<? extends byte[]> executionAttemptedEvent) {
+            return null;
+        }
+    };
 
     public final static IVCompressor compressor = new IVCompressor();
 
@@ -53,20 +66,36 @@ public class ImageResizer {
 
     public static Optional<byte[]> resizeImage(byte[] data, int width, int height, String formatName) {
         byte[] result = null;
+        var data1 = data;
+        var data2 = data.clone();
 
-        try {
-            result = resizeImageUsingCompressor(data, ImageFormats.valueOf(formatName.toUpperCase()), width, height);
-        } catch (ImageException e) {
-            log.error(e.getMessage(), e);
-            result = null;
-        }
+        List<Future<byte[]>> futures = new ArrayList<>();
 
-        if(result == null) {
+        futures.add(multiTask.submitTask(data1, d -> {
             try {
-                result = resizeImageUsingGraphics2D(data, width, height, formatName);
+                return resizeImageUsingCompressor(data1, ImageFormats.valueOf(formatName.toUpperCase()), width, height);
+            } catch (ImageException e) {
+                log.error(e.getMessage(), e);
+                return null;
+            }
+        }));
+
+        futures.add(multiTask.submitTask(data2, d -> {
+            try {
+                return resizeImageUsingGraphics2D(data2, width, height, formatName);
             } catch (IOException e) {
                 log.error(e.getMessage(), e);
-                result = null;
+                return null;
+            }
+        }));
+        
+        multiTask.waitForAllTask();
+
+        for(Future<byte[]> future : futures) {
+            try {
+                result = future.get();
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
             }
         }
 
