@@ -92,8 +92,10 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
 
                 resizeImage(metadata, imageFormatEnum, width, height);
             }
-            else if(metadata.getContentType().startsWith("video"))
-                resizeVideo(metadata, videoFormat, width, height);
+            else if(metadata.getContentType().startsWith("video")) {
+                //TODO: resize video not supported yet
+                // resizeVideo(metadata, videoFormat, width, height);
+            }
         }
 
         if (!ObjectUtils.isEmpty(metadata)) {
