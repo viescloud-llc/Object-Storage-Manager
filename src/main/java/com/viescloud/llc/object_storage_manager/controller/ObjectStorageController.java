@@ -64,7 +64,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
     @GetMapping("file")
     @SuppressWarnings("unchecked")
     public ResponseEntity<byte[]> getFileById(
-            @RequestHeader(required = false) Integer user_id,
+            @RequestHeader(required = false, defaultValue = "0") Integer user_id,
             @RequestParam(required = false) String path,
             @RequestParam(required = false) String fileName,
             @RequestParam(required = false) I id,
@@ -74,8 +74,6 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
             @RequestParam(required = false) VideoFormats videoFormat,
             @RequestParam(required = false, defaultValue = "png") String imageFormat) {
         
-        if(ObjectUtils.isEmpty(user_id))
-            HttpResponseThrowers.throwUnauthorized("Unauthorized");
         this.validateInput(id, path, fileName);
 
         var metadata = this.objectStorageService.getFileByCriteria(id, path, fileName, user_id);
@@ -216,8 +214,10 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         fileMetaData.setSharedUsers(metadata.getSharedUsers());
         if(metadata.getSize() == fileMetaData.getSize() && metadata.getData().equals(fileMetaData.getData()))
             return metadata;
+        this.objectStorageService.getFileCache().saveAndExpire(fileMetaData.getPath(), fileMetaData.getData());
         var result = this.objectStorageService.put((I) ReflectionUtils.getIdFieldValue(metadata), fileMetaData);
-        this.objectStorageService.replaceOnStorage(fileMetaData.getData(), fileMetaData.getPath());
+        this.objectStorageService.replaceOnStorage(this.objectStorageService.getFileCache().get(fileMetaData.getPath()), fileMetaData.getPath());
+        this.objectStorageService.getFileCache().deleteById(fileMetaData.getPath());
         return result;
     }
 

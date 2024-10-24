@@ -33,15 +33,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class S3FileMetaDataService extends ObjectStorageService<S3FileMetaData, Integer, S3FileMetaDataDao> {
 
+    
     @Autowired
     private MinioClient minioClient;
 
     @Value("${minio.s3.bucket}") 
     private String bucket;
 
-    public S3FileMetaDataService(DatabaseCall<S3FileMetaData, Integer> databaseCall, S3FileMetaDataDao repositoryDao) {
-        super(databaseCall, repositoryDao);
+    public S3FileMetaDataService(DatabaseCall<S3FileMetaData, Integer> databaseCall, S3FileMetaDataDao repositoryDao,
+        DatabaseCall<byte[], String> fileCache) {
+        super(databaseCall, repositoryDao, fileCache);
     }
+
 
     @Override
     protected S3FileMetaData newEmptyObject() {

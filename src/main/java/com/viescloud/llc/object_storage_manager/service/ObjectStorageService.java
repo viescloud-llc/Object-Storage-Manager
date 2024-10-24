@@ -16,15 +16,23 @@ import com.vincent.inc.viesspringutils.exception.HttpResponseThrowers;
 import com.vincent.inc.viesspringutils.model.UserPermissionEnum;
 import com.vincent.inc.viesspringutils.service.ViesServiceWithUserAccess;
 import com.vincent.inc.viesspringutils.util.DatabaseCall;
+import com.vincent.inc.viesspringutils.util.DateTime;
 import com.vincent.inc.viesspringutils.util.ReflectionUtils;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class ObjectStorageService<T extends ObjectStorageData, I, D extends ObjectStorageDao<T, I>> extends ViesServiceWithUserAccess<T, I, D> {
 
-    public ObjectStorageService(DatabaseCall<T, I> databaseCall, D repositoryDao) {
+    @Getter
+    private DatabaseCall<byte[], String> fileCache;
+
+    public ObjectStorageService(DatabaseCall<T, I> databaseCall, D repositoryDao, DatabaseCall<byte[], String> fileCache) {
         super(databaseCall, repositoryDao);
+        fileCache.init(String.format("%s%s", this.T_TYPE.getName(), "ServiceFileCache"));
+        fileCache.setTTL(DateTime.ofSeconds(30));
+        this.fileCache = fileCache;
     }
 
     protected abstract void checkIfFileDirectoryExist(String path);
@@ -167,20 +175,26 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
 
     @SuppressWarnings("unchecked")
     public void delete(T fileMetaData) {
-        var ownerId = this.getOwnerUserIdFromPath(fileMetaData.getPath());
-        var moveFilePath = String.format("%s/%s/%s", this.getRemoveFilePath(), ownerId, fileMetaData.getOriginalFilename());
-        
-        this.checkIfFileDirectoryExist(moveFilePath);
-        
-        var toMoveFilePath = moveFilePath;
-        int count = 0;
-        while(this.isFileExistOnStorage(toMoveFilePath)) {
-            count++;
-            toMoveFilePath = addCountToFilePath(moveFilePath, count);
+        if(this.isFileExistOnStorage(fileMetaData.getPath())) {
+            var ownerId = this.getOwnerUserIdFromPath(fileMetaData.getPath());
+            var moveFilePath = String.format("%s/%s/%s", this.getRemoveFilePath(), ownerId, fileMetaData.getOriginalFilename());
+            
+            this.checkIfFileDirectoryExist(moveFilePath);
+            
+            var toMoveFilePath = moveFilePath;
+            int count = 0;
+            while(this.isFileExistOnStorage(toMoveFilePath)) {
+                count++;
+                toMoveFilePath = addCountToFilePath(moveFilePath, count);
+            }
+            
+            this.moveFileOnStorage(fileMetaData.getPath(), toMoveFilePath);
+            super.delete((I) ReflectionUtils.getIdFieldValue(fileMetaData));
         }
-        
-        this.moveFileOnStorage(fileMetaData.getPath(), toMoveFilePath);
-        super.delete((I) ReflectionUtils.getIdFieldValue(fileMetaData));
+        else {
+            super.delete((I) ReflectionUtils.getIdFieldValue(fileMetaData));
+            return;
+        }
     }
 
     @Override
@@ -249,7 +263,7 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
 
     @Override
     public boolean isRelatedToUser(T fileMetaData, int userId, List<UserPermissionEnum> userPermissions) {
-        if(fileMetaData.getPublicity() != null && fileMetaData.getPublicity() == true && (userPermissions == null || userPermissions.contains(UserPermissionEnum.READ)))
+        if(fileMetaData.getPublicity() != null && fileMetaData.getPublicity() == true)
             return true;
         else
             return super.isRelatedToUser(fileMetaData, userId, userPermissions);
@@ -272,10 +286,16 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
     @Override
     protected T processingGetOutput(T object) {
         if(!ObjectUtils.isEmpty(object)) {
-            //TODO: Add check if file exist on storage and if not remove from database and return 404
-            var data = this.readRawOnStorage(object.getPath());
-            object.setData(data);
+            if(!this.isFileExistOnStorage(object.getPath())) {
+                this.delete(object);
+                HttpResponseThrowers.throwNotFound("File not found");
+            }   
+            else {
+                var data = this.readRawOnStorage(object.getPath());
+                object.setData(data);
+            }
         }
+
         return object;
     }
 
@@ -287,13 +307,18 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         if (this.isFileExist(object.getPath()))
             HttpResponseThrowers.throwBadRequest("File name is already exist");
 
+        this.fileCache.saveAndExpire(object.getPath(), object.getData());
+        object.setData(null);
+
         return object;
     }
 
     @Override
     protected T processingPostOutput(T object) {
         this.checkIfFileDirectoryExist(object.getPath());
-        this.writeOnStorage(object.getData(), object.getPath());
+        var data = this.fileCache.get(object.getPath());
+        this.writeOnStorage(data, object.getPath());
+        this.fileCache.deleteById(object.getPath());
         return object;
     }
 
@@ -304,6 +329,9 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
 
         if (!this.isFileExist(input.getPath()))
             HttpResponseThrowers.throwBadRequest("File not found");
+
+        this.fileCache.saveAndExpire(input.getPath(), input.getData());
+        input.setData(null);
 
         return input;
     }

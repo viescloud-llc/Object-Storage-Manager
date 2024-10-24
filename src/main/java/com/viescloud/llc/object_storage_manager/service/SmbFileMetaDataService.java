@@ -18,8 +18,8 @@ public class SmbFileMetaDataService extends ObjectStorageService<SmbFileMetaData
     private final SmbSession smbSession;
 
     public SmbFileMetaDataService(DatabaseCall<SmbFileMetaData, Integer> databaseCall, SmbFileMetaDataDao repositoryDao,
-            SmbSessionFactory smbSessionFactory) {
-        super(databaseCall, repositoryDao);
+            SmbSessionFactory smbSessionFactory, DatabaseCall<byte[], String> fileDatabaseCall) {
+        super(databaseCall, repositoryDao, fileDatabaseCall);
         this.smbSession = smbSessionFactory.getSession();
     }
 
