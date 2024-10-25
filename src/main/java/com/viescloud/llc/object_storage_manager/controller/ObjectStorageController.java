@@ -223,10 +223,13 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
             fileMetaData.setSharedUsers(metadata.getSharedUsers());
             if(metadata.getSize() == fileMetaData.getSize() && metadata.getData().equals(fileMetaData.getData()))
                 return metadata;
-            this.objectStorageService.getFileCache().saveAndExpire(fileMetaData.getPath(), fileMetaData.getData());
+            // this.objectStorageService.getFileCache().saveAndExpire(fileMetaData.getPath(), fileMetaData.getData());
             var result = this.objectStorageService.put((I) ReflectionUtils.getIdFieldValue(metadata), fileMetaData);
-            this.objectStorageService.replaceOnStorage(this.objectStorageService.getFileCache().get(fileMetaData.getPath()), fileMetaData.getPath());
-            this.objectStorageService.getFileCache().deleteById(fileMetaData.getPath());
+            this.objectStorageService.replaceOnStorage(fileMetaData.getData(), path);
+            // this.objectStorageService.replaceOnStorage(this.objectStorageService.getFileCache().get(fileMetaData.getPath()), fileMetaData.getPath());
+            // this.objectStorageService.getFileCache().deleteById(fileMetaData.getPath());
+            metadata.close();
+            fileMetaData.close();
             return result;
         }
         catch(Exception e) {

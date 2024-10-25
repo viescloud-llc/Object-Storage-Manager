@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.UUID;
 
 import org.springframework.util.ObjectUtils;
 
@@ -308,9 +307,9 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         if (this.isFileExist(object.getPath()))
             HttpResponseThrowers.throwBadRequest("File name is already exist");
 
-        var key = UUID.nameUUIDFromBytes(object.getPath().getBytes()).toString();
-        this.fileCache.saveAndExpire(key, object.getData());
-        object.setData(null);
+        // var key = UUID.nameUUIDFromBytes(object.getPath().getBytes()).toString();
+        // this.fileCache.saveAndExpire(key, object.getData());
+        // object.setData(null);
 
         return object;
     }
@@ -318,10 +317,10 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
     @Override
     protected T processingPostOutput(T object) {
         this.checkIfFileDirectoryExist(object.getPath());
-        var key = UUID.nameUUIDFromBytes(object.getPath().getBytes()).toString();
-        var data = this.fileCache.get(key);
-        this.writeOnStorage(data, object.getPath());
-        this.fileCache.deleteById(object.getPath());
+        // var key = UUID.nameUUIDFromBytes(object.getPath().getBytes()).toString();
+        // var data = this.fileCache.get(key);
+        // this.writeOnStorage(data, object.getPath());
+        // this.fileCache.deleteById(object.getPath());
         return object;
     }
 
@@ -333,8 +332,8 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         if (!this.isFileExist(input.getPath()))
             HttpResponseThrowers.throwBadRequest("File not found");
 
-        this.fileCache.saveAndExpire(input.getPath(), input.getData());
-        input.setData(null);
+        // this.fileCache.saveAndExpire(input.getPath(), input.getData());
+        // input.setData(null);
 
         return input;
     }
