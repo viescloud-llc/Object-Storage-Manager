@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 import org.springframework.util.ObjectUtils;
 
@@ -307,7 +308,8 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         if (this.isFileExist(object.getPath()))
             HttpResponseThrowers.throwBadRequest("File name is already exist");
 
-        this.fileCache.saveAndExpire(object.getPath(), object.getData());
+        var key = UUID.nameUUIDFromBytes(object.getPath().getBytes()).toString();
+        this.fileCache.saveAndExpire(key, object.getData());
         object.setData(null);
 
         return object;
@@ -316,7 +318,8 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
     @Override
     protected T processingPostOutput(T object) {
         this.checkIfFileDirectoryExist(object.getPath());
-        var data = this.fileCache.get(object.getPath());
+        var key = UUID.nameUUIDFromBytes(object.getPath().getBytes()).toString();
+        var data = this.fileCache.get(key);
         this.writeOnStorage(data, object.getPath());
         this.fileCache.deleteById(object.getPath());
         return object;
