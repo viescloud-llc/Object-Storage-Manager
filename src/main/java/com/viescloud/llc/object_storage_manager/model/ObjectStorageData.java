@@ -18,7 +18,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @MappedSuperclass
 @SuperBuilder
-public abstract class ObjectStorageData extends UserAccess {
+public abstract class ObjectStorageData extends UserAccess implements AutoCloseable  {
     @Column
     private String originalFilename;
     
@@ -37,4 +37,10 @@ public abstract class ObjectStorageData extends UserAccess {
     @JsonIgnore
     @Transient
     private byte[] data;
+
+    @Override
+    public void close() throws Exception {
+        this.data = null;
+        System.gc();
+    }
 }

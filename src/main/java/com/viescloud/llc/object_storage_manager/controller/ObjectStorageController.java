@@ -174,6 +174,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
             return (T) HttpResponseThrowers.throwNotFound("Metadata not found");
     }
 
+    @SuppressWarnings("unchecked")
     @PostMapping("file")
     public T uploadFile(
         @RequestHeader(required = false) Integer user_id, 
@@ -184,9 +185,13 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
             HttpResponseThrowers.throwUnauthorized("Unauthorized");
         if(publicity == null)
             publicity = false;
-
-        var metadata = this.fromMultipartFile(file, user_id, file.getBytes(), publicity);
-        return this.objectStorageService.post(metadata);
+        
+        try(var metadata = this.fromMultipartFile(file, user_id, file.getBytes(), publicity)) {
+            return this.objectStorageService.post(metadata);
+        }
+        catch(Exception e) {
+            return (T) HttpResponseThrowers.throwServerError("Failed to upload file");
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -206,19 +211,24 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         if (ObjectUtils.isEmpty(metadata))
             HttpResponseThrowers.throwBadRequest("No file metadata found");
         this.objectStorageService.checkIsRelatedToUser(metadata, user_id, List.of(UserPermissionEnum.WRITE));
-        var fileMetaData = this.fromMultipartFile(file, user_id, file.getBytes(), publicity);
-        if(!metadata.getPath().equals(fileMetaData.getPath()))
+
+        try(var fileMetaData = this.fromMultipartFile(file, user_id, file.getBytes(), publicity)) {
+            if(!metadata.getPath().equals(fileMetaData.getPath()))
             HttpResponseThrowers.throwBadRequest("Path, file name or type cannot be changed");
-        fileMetaData.setInputUserId(user_id);
-        fileMetaData.setOwnerUserId(metadata.getOwnerUserId());
-        fileMetaData.setSharedUsers(metadata.getSharedUsers());
-        if(metadata.getSize() == fileMetaData.getSize() && metadata.getData().equals(fileMetaData.getData()))
-            return metadata;
-        this.objectStorageService.getFileCache().saveAndExpire(fileMetaData.getPath(), fileMetaData.getData());
-        var result = this.objectStorageService.put((I) ReflectionUtils.getIdFieldValue(metadata), fileMetaData);
-        this.objectStorageService.replaceOnStorage(this.objectStorageService.getFileCache().get(fileMetaData.getPath()), fileMetaData.getPath());
-        this.objectStorageService.getFileCache().deleteById(fileMetaData.getPath());
-        return result;
+            fileMetaData.setInputUserId(user_id);
+            fileMetaData.setOwnerUserId(metadata.getOwnerUserId());
+            fileMetaData.setSharedUsers(metadata.getSharedUsers());
+            if(metadata.getSize() == fileMetaData.getSize() && metadata.getData().equals(fileMetaData.getData()))
+                return metadata;
+            this.objectStorageService.getFileCache().saveAndExpire(fileMetaData.getPath(), fileMetaData.getData());
+            var result = this.objectStorageService.put((I) ReflectionUtils.getIdFieldValue(metadata), fileMetaData);
+            this.objectStorageService.replaceOnStorage(this.objectStorageService.getFileCache().get(fileMetaData.getPath()), fileMetaData.getPath());
+            this.objectStorageService.getFileCache().deleteById(fileMetaData.getPath());
+            return result;
+        }
+        catch(Exception e) {
+            return (T) HttpResponseThrowers.throwServerError("Failed to upload file");
+        }
     }
 
     @PatchMapping("metadata")

@@ -145,7 +145,7 @@
 		<dependency>
 			<groupId>com.vincent.inc</groupId>
 			<artifactId>vies-spring-utils</artifactId>
-			<version>3.0.1</version>
+			<version>3.0.7</version>
 		</dependency>
 
 		<dependency>
