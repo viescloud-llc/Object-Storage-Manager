@@ -28,7 +28,7 @@ spec:
           requests:
             memory: 500M
           limits:
-            memory: 1Gi
+            memory: 2Gi
         livenessProbe:
           tcpSocket:
             port: 83
