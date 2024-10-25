@@ -75,33 +75,36 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
             @RequestParam(required = false, defaultValue = "png") String imageFormat) {
         
         this.validateInput(id, path, fileName);
-
-        var metadata = this.objectStorageService.getFileByCriteria(id, path, fileName, user_id);
-
-        if(!ObjectUtils.isEmpty(resizeResolution)) {
-            width = resizeResolution.getWidth();
-            height = resizeResolution.getHeight();
-        }
         
-        if (!ObjectUtils.isEmpty(width) && !ObjectUtils.isEmpty(height)) {
-            if(metadata.getContentType().startsWith("image")) {
-                var imageFormatEnum = Optional.ofNullable(IMAGE_FORMATS.get(imageFormat.toLowerCase()))
-                                              .orElse(ImageFormats.PNG);
-
-                resizeImage(metadata, imageFormatEnum, width, height);
+        try (var metadata = this.objectStorageService.getFileByCriteria(id, path, fileName, user_id)) {
+            if(!ObjectUtils.isEmpty(resizeResolution)) {
+                width = resizeResolution.getWidth();
+                height = resizeResolution.getHeight();
             }
-            else if(metadata.getContentType().startsWith("video")) {
-                //TODO: resize video not supported yet
-                // resizeVideo(metadata, videoFormat, width, height);
+            
+            if (!ObjectUtils.isEmpty(width) && !ObjectUtils.isEmpty(height)) {
+                if(metadata.getContentType().startsWith("image")) {
+                    var imageFormatEnum = Optional.ofNullable(IMAGE_FORMATS.get(imageFormat.toLowerCase()))
+                                                  .orElse(ImageFormats.PNG);
+    
+                    resizeImage(metadata, imageFormatEnum, width, height);
+                }
+                else if(metadata.getContentType().startsWith("video")) {
+                    //TODO: resize video not supported yet
+                    // resizeVideo(metadata, videoFormat, width, height);
+                }
             }
+    
+            if (!ObjectUtils.isEmpty(metadata)) {
+                this.objectStorageService.checkIsRelatedToUser(metadata, user_id, List.of(UserPermissionEnum.READ));
+                return ResponseEntity.ok().header("Content-Type", metadata.getContentType()).body(metadata.getData());
+            }
+            else
+                return (ResponseEntity<byte[]>) HttpResponseThrowers.throwNotFound("File not found");
         }
-
-        if (!ObjectUtils.isEmpty(metadata)) {
-            this.objectStorageService.checkIsRelatedToUser(metadata, user_id, List.of(UserPermissionEnum.READ));
-            return ResponseEntity.ok().header("Content-Type", metadata.getContentType()).body(metadata.getData());
+        catch (Exception e) {
+            return (ResponseEntity<byte[]>) HttpResponseThrowers.throwServerError("Failed to get file");
         }
-        else
-            return (ResponseEntity<byte[]>) HttpResponseThrowers.throwNotFound("File not found");
     }
 
     private void resizeImage(T metadata, ImageFormats imageFormat, int width, int height) {
