@@ -16,8 +16,8 @@ public class DatabaseFileMetaDataService extends ObjectStorageService<DatabaseFi
     private DatabaseFileDao databaseFileDao;
 
     public DatabaseFileMetaDataService(DatabaseCall<DatabaseFileMetaData, Integer> databaseCall,
-            DatabaseFileMetaDataDao repositoryDao, DatabaseCall<byte[], String> fileCache) {
-        super(databaseCall, repositoryDao, fileCache);
+            DatabaseFileMetaDataDao repositoryDao, DatabaseCall<Boolean, String> fetchFileFlagCache) {
+        super(databaseCall, repositoryDao, fetchFileFlagCache);
     }
 
     @Override

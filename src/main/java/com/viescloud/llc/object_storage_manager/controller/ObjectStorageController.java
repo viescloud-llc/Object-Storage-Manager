@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.viescloud.llc.object_storage_manager.model.ObjectStorageData;
 import com.viescloud.llc.object_storage_manager.service.ObjectStorageService;
@@ -102,7 +103,11 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
             else
                 return (ResponseEntity<byte[]>) HttpResponseThrowers.throwNotFound("File not found");
         }
+        catch(ResponseStatusException e) {
+            throw e;
+        }
         catch (Exception e) {
+            log.error(e.getMessage(), e);
             return (ResponseEntity<byte[]>) HttpResponseThrowers.throwServerError("Failed to get file");
         }
     }
@@ -192,7 +197,11 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         try(var metadata = this.fromMultipartFile(file, user_id, file.getBytes(), publicity)) {
             return this.objectStorageService.post(metadata);
         }
+        catch(ResponseStatusException e) {
+            throw e;
+        }
         catch(Exception e) {
+            log.error(e.getMessage(), e);
             return (T) HttpResponseThrowers.throwServerError("Failed to upload file");
         }
     }
@@ -216,23 +225,25 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         this.objectStorageService.checkIsRelatedToUser(metadata, user_id, List.of(UserPermissionEnum.WRITE));
 
         try(var fileMetaData = this.fromMultipartFile(file, user_id, file.getBytes(), publicity)) {
-            if(!metadata.getPath().equals(fileMetaData.getPath()))
-            HttpResponseThrowers.throwBadRequest("Path, file name or type cannot be changed");
-            fileMetaData.setInputUserId(user_id);
-            fileMetaData.setOwnerUserId(metadata.getOwnerUserId());
-            fileMetaData.setSharedUsers(metadata.getSharedUsers());
             if(metadata.getSize() == fileMetaData.getSize() && metadata.getData().equals(fileMetaData.getData()))
                 return metadata;
-            // this.objectStorageService.getFileCache().saveAndExpire(fileMetaData.getPath(), fileMetaData.getData());
-            var result = this.objectStorageService.put((I) ReflectionUtils.getIdFieldValue(metadata), fileMetaData);
-            this.objectStorageService.replaceOnStorage(fileMetaData.getData(), path);
-            // this.objectStorageService.replaceOnStorage(this.objectStorageService.getFileCache().get(fileMetaData.getPath()), fileMetaData.getPath());
-            // this.objectStorageService.getFileCache().deleteById(fileMetaData.getPath());
+
+            metadata.setInputUserId(user_id);
+            metadata.setSize(fileMetaData.getSize());
+            metadata.setData(fileMetaData.getData());
+            
+            var result = this.objectStorageService.put((I) ReflectionUtils.getIdFieldValue(metadata), metadata);
+            this.objectStorageService.replaceOnStorage(metadata.getData(), metadata.getPath());
+
             metadata.close();
             fileMetaData.close();
             return result;
         }
+        catch(ResponseStatusException e) {
+            throw e;
+        }
         catch(Exception e) {
+            log.error(e.getMessage(), e);
             return (T) HttpResponseThrowers.throwServerError("Failed to upload file");
         }
     }

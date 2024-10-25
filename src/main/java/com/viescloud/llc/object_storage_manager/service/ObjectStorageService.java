@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.UUID;
+import java.util.Optional;
 
 import org.springframework.util.ObjectUtils;
 
@@ -19,20 +21,18 @@ import com.vincent.inc.viesspringutils.util.DatabaseCall;
 import com.vincent.inc.viesspringutils.util.DateTime;
 import com.vincent.inc.viesspringutils.util.ReflectionUtils;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class ObjectStorageService<T extends ObjectStorageData, I, D extends ObjectStorageDao<T, I>> extends ViesServiceWithUserAccess<T, I, D> {
 
-    @Getter
-    private DatabaseCall<byte[], String> fileCache;
+    DatabaseCall<Boolean, String> fetchFileFlagCache;
 
-    public ObjectStorageService(DatabaseCall<T, I> databaseCall, D repositoryDao, DatabaseCall<byte[], String> fileCache) {
+    public ObjectStorageService(DatabaseCall<T, I> databaseCall, D repositoryDao, DatabaseCall<Boolean, String> fetchFileFlagCache) {
         super(databaseCall, repositoryDao);
-        fileCache.init(String.format("%s%s", this.T_TYPE.getName(), "ServiceFileCache"));
-        fileCache.setTTL(DateTime.ofSeconds(30));
-        this.fileCache = fileCache;
+        this.fetchFileFlagCache = fetchFileFlagCache;
+        this.fetchFileFlagCache.init(String.format("%s.%s", this.T_TYPE.getSimpleName(), "getFileFlag"));
+        this.fetchFileFlagCache.setTTL(DateTime.ofSeconds(60));
     }
 
     protected abstract void checkIfFileDirectoryExist(String path);
@@ -291,6 +291,8 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
                 HttpResponseThrowers.throwNotFound("File not found");
             }   
             else {
+                //TODO: flag make get id to not fetch data
+                
                 var data = this.readRawOnStorage(object.getPath());
                 object.setData(data);
             }
@@ -307,9 +309,7 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         if (this.isFileExist(object.getPath()))
             HttpResponseThrowers.throwBadRequest("File name is already exist");
 
-        // var key = UUID.nameUUIDFromBytes(object.getPath().getBytes()).toString();
-        // this.fileCache.saveAndExpire(key, object.getData());
-        // object.setData(null);
+        //TODO: flag make get id to not fetch data
 
         return object;
     }
@@ -317,10 +317,11 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
     @Override
     protected T processingPostOutput(T object) {
         this.checkIfFileDirectoryExist(object.getPath());
-        // var key = UUID.nameUUIDFromBytes(object.getPath().getBytes()).toString();
-        // var data = this.fileCache.get(key);
-        // this.writeOnStorage(data, object.getPath());
-        // this.fileCache.deleteById(object.getPath());
+        var data = object.getData();
+        this.writeOnStorage(data, object.getPath());
+
+        //TODO: flag make get id to not fetch data
+        
         return object;
     }
 
@@ -332,9 +333,33 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         if (!this.isFileExist(input.getPath()))
             HttpResponseThrowers.throwBadRequest("File not found");
 
-        // this.fileCache.saveAndExpire(input.getPath(), input.getData());
-        // input.setData(null);
+        //TODO: flag make get id to not fetch data
 
         return input;
+    }
+
+    @Override
+    protected T processingPutOutput(I id, T output) {
+        //TODO: flag make get id to not fetch data
+
+        return super.processingPutOutput(id, output);
+    }
+
+    @Override
+    protected T processingPatchInput(I id, T input) {
+        //TODO: flag make get id to not fetch data
+
+        return super.processingPatchInput(id, input);
+    }
+
+    @Override
+    protected T processingPatchOutput(I id, T output) {
+        //TODO: flag make get id to not fetch data
+
+        return super.processingPatchOutput(id, output);
+    }
+
+    private String makeFlagKey() {
+        return UUID.nameUUIDFromBytes(String.format("%s/%s", Thread.currentThread().getName()).getBytes()).toString();
     }
 }
