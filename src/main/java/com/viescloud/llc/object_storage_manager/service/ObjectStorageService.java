@@ -7,19 +7,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.UUID;
-import java.util.Optional;
 
 import org.springframework.util.ObjectUtils;
 
 import com.viescloud.llc.object_storage_manager.dao.ObjectStorageDao;
 import com.viescloud.llc.object_storage_manager.model.ObjectStorageData;
-import com.vincent.inc.viesspringutils.exception.HttpResponseThrowers;
-import com.vincent.inc.viesspringutils.model.UserPermissionEnum;
-import com.vincent.inc.viesspringutils.service.ViesServiceWithUserAccess;
-import com.vincent.inc.viesspringutils.util.DatabaseCall;
-import com.vincent.inc.viesspringutils.util.DateTime;
-import com.vincent.inc.viesspringutils.util.ReflectionUtils;
+import com.viescloud.llc.viesspringutils.exception.HttpResponseThrowers;
+import com.viescloud.llc.viesspringutils.model.UserPermissionEnum;
+import com.viescloud.llc.viesspringutils.service.ViesServiceWithUserAccess;
+import com.viescloud.llc.viesspringutils.util.DatabaseCall;
+import com.viescloud.llc.viesspringutils.util.DateTime;
+import com.viescloud.llc.viesspringutils.util.ReflectionUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -357,9 +355,5 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         //TODO: flag make get id to not fetch data
 
         return super.processingPatchOutput(id, output);
-    }
-
-    private String makeFlagKey() {
-        return UUID.nameUUIDFromBytes(String.format("%s/%s", Thread.currentThread().getName()).getBytes()).toString();
     }
 }

@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import com.viescloud.llc.object_storage_manager.model.ObjectStorageData;
-import com.vincent.inc.viesspringutils.dao.ViesUserAccessJpaRepository;
+import com.viescloud.llc.viesspringutils.dao.ViesUserAccessJpaRepository;
 
 @NoRepositoryBean
 public interface ObjectStorageDao<T extends ObjectStorageData, I> extends ViesUserAccessJpaRepository<T, I> {

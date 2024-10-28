@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 
 import com.viescloud.llc.object_storage_manager.dao.S3FileMetaDataDao;
 import com.viescloud.llc.object_storage_manager.model.S3FileMetaData;
-import com.vincent.inc.viesspringutils.exception.HttpResponseThrowers;
-import com.vincent.inc.viesspringutils.util.DatabaseCall;
+import com.viescloud.llc.viesspringutils.exception.HttpResponseThrowers;
+import com.viescloud.llc.viesspringutils.util.DatabaseCall;
 
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;

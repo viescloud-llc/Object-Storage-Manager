@@ -7,8 +7,8 @@ import org.springframework.integration.smb.session.SmbSessionFactory;
 import org.springframework.stereotype.Service;
 import com.viescloud.llc.object_storage_manager.dao.SmbFileMetaDataDao;
 import com.viescloud.llc.object_storage_manager.model.SmbFileMetaData;
-import com.vincent.inc.viesspringutils.exception.HttpResponseThrowers;
-import com.vincent.inc.viesspringutils.util.DatabaseCall;
+import com.viescloud.llc.viesspringutils.exception.HttpResponseThrowers;
+import com.viescloud.llc.viesspringutils.util.DatabaseCall;
 import lombok.extern.slf4j.Slf4j;
 
 @Service

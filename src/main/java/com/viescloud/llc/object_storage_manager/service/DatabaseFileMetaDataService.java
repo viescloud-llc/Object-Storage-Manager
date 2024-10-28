@@ -7,7 +7,7 @@ import com.viescloud.llc.object_storage_manager.dao.DatabaseFileDao;
 import com.viescloud.llc.object_storage_manager.dao.DatabaseFileMetaDataDao;
 import com.viescloud.llc.object_storage_manager.model.DatabaseFile;
 import com.viescloud.llc.object_storage_manager.model.DatabaseFileMetaData;
-import com.vincent.inc.viesspringutils.util.DatabaseCall;
+import com.viescloud.llc.viesspringutils.util.DatabaseCall;
 
 @Service
 public class DatabaseFileMetaDataService extends ObjectStorageService<DatabaseFileMetaData, Integer, DatabaseFileMetaDataDao> {

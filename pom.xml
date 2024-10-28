@@ -143,9 +143,9 @@
 
 		<!-- self host dependency -->
 		<dependency>
-			<groupId>com.vincent.inc</groupId>
+			<groupId>com.viescloud.llc</groupId>
 			<artifactId>vies-spring-utils</artifactId>
-			<version>3.0.7</version>
+			<version>3.1.1</version>
 		</dependency>
 
 		<dependency>
@@ -154,6 +154,7 @@
 			<version>2.0.0</version>
 		</dependency>
 	</dependencies>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>

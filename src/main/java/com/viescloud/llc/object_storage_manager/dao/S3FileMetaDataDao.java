@@ -1,7 +1,7 @@
 package com.viescloud.llc.object_storage_manager.dao;
 
 import com.viescloud.llc.object_storage_manager.model.S3FileMetaData;
-import com.vincent.inc.viesspringutils.dao.ViesUserAccessJpaRepositoryTemplate;
+import com.viescloud.llc.viesspringutils.dao.ViesUserAccessJpaRepositoryTemplate;
 
 public interface S3FileMetaDataDao extends ObjectStorageDao<S3FileMetaData, Integer> {}
 class S3FileMetaDataDaoImpl extends ViesUserAccessJpaRepositoryTemplate<S3FileMetaData> {}

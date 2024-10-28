@@ -1,8 +1,8 @@
 package com.viescloud.llc.object_storage_manager.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.vincent.inc.viesspringutils.interfaces.JsonExclude;
-import com.vincent.inc.viesspringutils.model.UserAccess;
+import com.viescloud.llc.viesspringutils.interfaces.JsonExclude;
+import com.viescloud.llc.viesspringutils.model.UserAccess;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;

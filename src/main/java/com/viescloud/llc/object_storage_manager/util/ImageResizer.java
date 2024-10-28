@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Optional;
 import javax.imageio.ImageIO;
 
-import com.vincent.inc.viesspringutils.util.MultiTask;
+import com.viescloud.llc.viesspringutils.util.MultiTask;
 
 import io.github.techgnious.IVCompressor;
 import io.github.techgnious.dto.IVSize;

@@ -22,9 +22,9 @@ import org.springframework.web.server.ResponseStatusException;
 import com.viescloud.llc.object_storage_manager.model.ObjectStorageData;
 import com.viescloud.llc.object_storage_manager.service.ObjectStorageService;
 import com.viescloud.llc.object_storage_manager.util.ImageResizer;
-import com.vincent.inc.viesspringutils.exception.HttpResponseThrowers;
-import com.vincent.inc.viesspringutils.model.UserPermissionEnum;
-import com.vincent.inc.viesspringutils.util.ReflectionUtils;
+import com.viescloud.llc.viesspringutils.exception.HttpResponseThrowers;
+import com.viescloud.llc.viesspringutils.model.UserPermissionEnum;
+import com.viescloud.llc.viesspringutils.util.ReflectionUtils;
 
 import io.github.techgnious.IVCompressor;
 import io.github.techgnious.dto.IVSize;

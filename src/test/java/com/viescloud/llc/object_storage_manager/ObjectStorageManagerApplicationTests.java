@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.viescloud.llc.object_storage_manager.controller.S3FileMetaDataController;
-import com.vincent.inc.viesspringutils.util.WebCall;
+import com.viescloud.llc.viesspringutils.util.WebCall;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;

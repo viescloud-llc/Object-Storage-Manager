@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.vincent.inc.viesspringutils.ViesApplication;
+import com.viescloud.llc.viesspringutils.ViesApplication;
 
 @SpringBootApplication
 @EnableDiscoveryClient
