@@ -13,9 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 @RequestMapping("database/v1")
-public class DatabaseFileMetaDataController extends ObjectStorageController<DatabaseFileMetaData, Integer, DatabaseFileMetaDataService> {
+public class DatabaseFileMetaDataController extends ObjectStorageController<Integer, DatabaseFileMetaData, DatabaseFileMetaDataService> {
 
-    public DatabaseFileMetaDataController(ObjectStorageService<DatabaseFileMetaData, Integer, ?> objectStorageService) {
+    public DatabaseFileMetaDataController(ObjectStorageService<Integer, DatabaseFileMetaData, ?> objectStorageService) {
         super(objectStorageService);
     }
 

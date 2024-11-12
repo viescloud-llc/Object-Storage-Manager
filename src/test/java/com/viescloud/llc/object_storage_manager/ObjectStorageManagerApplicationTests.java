@@ -3,6 +3,7 @@ package com.viescloud.llc.object_storage_manager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +35,10 @@ class ObjectStorageManagerApplicationTests {
         var data = WebCall.of(restTemplate, byte[].class)
                           .skipRestClientError(true)
                           .logRequest(true)
-                          .get(Uri, null)
+                          .request(HttpMethod.GET, Uri.toString())
+                          .exchange()
+                          .logResponseInFormat()
+                          .getOptionalResponseBody()
                           .orElse(null);
 
         assertNotNull(data);
@@ -50,7 +54,7 @@ class ObjectStorageManagerApplicationTests {
 
         assertNotNull(response);
 
-        var response2 = this.s3FileMetaDataController.getFileById(-1, null, null, response.getId(), null, null, null, null, null);
+        var response2 = this.s3FileMetaDataController.getFileByCriteria(-1, null, null, response.getId(), null, null, null, null, null);
         assertNotNull(response2);
         assertTrue(response2.getStatusCode().is2xxSuccessful());
         assertNotNull(response2.getBody());
@@ -60,7 +64,10 @@ class ObjectStorageManagerApplicationTests {
         var data2 = WebCall.of(restTemplate, byte[].class)
                           .skipRestClientError(true)
                           .logRequest(true)
-                          .get(Uri, null)
+                          .request(HttpMethod.GET, Uri.toString())
+                          .exchange()
+                          .logResponseInFormat()
+                          .getOptionalResponseBody()
                           .orElse(null);
 
         assertNotNull(data2);
@@ -75,9 +82,39 @@ class ObjectStorageManagerApplicationTests {
         var response3 = this.s3FileMetaDataController.updateFile(-1, null, null, response.getId(), mockFile2, false);
         assertNotNull(response3);
 
-        var response4 = this.s3FileMetaDataController.getFileById(-1, null, null, response3.getId(), null, null, null, null, null);
+        var response4 = this.s3FileMetaDataController.getFileByCriteria(-1, null, null, response3.getId(), null, null, null, null, null);
         assertNotNull(response4);
         assertTrue(response4.getStatusCode().is2xxSuccessful());
         assertNotNull(response4.getBody());
+    }
+
+    // @Test
+    public void test2() throws IOException {
+        var data = WebCall.of(restTemplate, String.class)
+                          .skipRestClientError(true)
+                          .logRequest(true)
+                          .request(HttpMethod.GET, "http://10.24.24.2:8385/public/json/test1.json")
+                          .exchange()
+                          .logResponseInFormat()
+                          .getOptionalResponseBody()
+                          .orElse(null);
+
+        assertNotNull(data);
+
+        MultipartFile mockFile = new MockMultipartFile(
+            "file",                            // Name of the form field
+            "/Wrap/generalSetting.json",                     // Original file name
+            "application/json",                       // Content type
+            data.getBytes()                         // File content as byte array
+        );
+
+        var response = this.s3FileMetaDataController.uploadFile(-1, mockFile, false);
+
+        assertNotNull(response);
+
+        var response2 = this.s3FileMetaDataController.getFileByCriteria(-1, null, "Wrap/generalSetting.json", null, null, null, null, null, null);
+        assertNotNull(response2);
+        assertTrue(response2.getStatusCode().is2xxSuccessful());
+        assertNotNull(response2.getBody());
     }
 }

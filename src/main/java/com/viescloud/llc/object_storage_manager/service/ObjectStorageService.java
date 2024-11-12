@@ -3,6 +3,7 @@ package com.viescloud.llc.object_storage_manager.service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,23 +15,22 @@ import com.viescloud.llc.object_storage_manager.dao.ObjectStorageDao;
 import com.viescloud.llc.object_storage_manager.model.ObjectStorageData;
 import com.viescloud.llc.viesspringutils.exception.HttpResponseThrowers;
 import com.viescloud.llc.viesspringutils.model.UserPermissionEnum;
+import com.viescloud.llc.viesspringutils.repository.DatabaseCall;
 import com.viescloud.llc.viesspringutils.service.ViesServiceWithUserAccess;
-import com.viescloud.llc.viesspringutils.util.DatabaseCall;
-import com.viescloud.llc.viesspringutils.util.DateTime;
+import com.viescloud.llc.viesspringutils.util.ExpirableHashSet;
 import com.viescloud.llc.viesspringutils.util.ReflectionUtils;
 
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ObjectStorageService<T extends ObjectStorageData, I, D extends ObjectStorageDao<T, I>> extends ViesServiceWithUserAccess<T, I, D> {
+public abstract class ObjectStorageService<I, T extends ObjectStorageData, D extends ObjectStorageDao<T, I>> extends ViesServiceWithUserAccess<I, T, D> {
 
-    DatabaseCall<Boolean, String> fetchFileFlagCache;
+    ExpirableHashSet<T> ignoreFetchFileFlagCache;
 
-    public ObjectStorageService(DatabaseCall<T, I> databaseCall, D repositoryDao, DatabaseCall<Boolean, String> fetchFileFlagCache) {
+    public ObjectStorageService(DatabaseCall<I, T> databaseCall, D repositoryDao) {
         super(databaseCall, repositoryDao);
-        this.fetchFileFlagCache = fetchFileFlagCache;
-        this.fetchFileFlagCache.init(String.format("%s.%s", this.T_TYPE.getSimpleName(), "getFileFlag"));
-        this.fetchFileFlagCache.setTTL(DateTime.ofSeconds(60));
+        this.ignoreFetchFileFlagCache = new ExpirableHashSet<>(Duration.ofSeconds(30));
     }
 
     protected abstract void checkIfFileDirectoryExist(String path);
@@ -42,6 +42,12 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
 
     protected String getRemoveFilePath() {
         return "/Trash";
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        this.ignoreFetchFileFlagCache.clear();
+        this.ignoreFetchFileFlagCache.shutdown();
     }
     
     @Override
@@ -92,6 +98,7 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
     }
 
     public T getFileMetaDataByPath(String path, int userId) {
+        path = formatPath(path);
         return getFileMetaDataByPathWithTry(path, userId, 0);
     }
 
@@ -100,6 +107,7 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
     }
 
     public T getFileByPath(String path) {
+        path = formatPath(path);
         var metadata = this.getFileMetaDataByPath(path);
         return ObjectUtils.isEmpty(metadata) ? null : this.processingGetOutput(metadata);
     }
@@ -109,6 +117,7 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
     }
 
     private T getFileByPathWithTry(String path, int userId, int numTry) {
+        path = formatPath(path);
         var metadata = this.getFileMetaDataByPathWithTry(path, userId, numTry);
         return ObjectUtils.isEmpty(metadata) ? null : this.processingGetOutput(metadata);
     }
@@ -289,10 +298,8 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
                 HttpResponseThrowers.throwNotFound("File not found");
             }   
             else {
-                //TODO: flag make get id to not fetch data
-                
-                var data = this.readRawOnStorage(object.getPath());
-                object.setData(data);
+                if(!this.ignoreFetchFileFlagCache.contains(this.getUniqueKey(object)))
+                    object.setData(getRawData(object));
             }
         }
 
@@ -307,7 +314,8 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         if (this.isFileExist(object.getPath()))
             HttpResponseThrowers.throwBadRequest("File name is already exist");
 
-        //TODO: flag make get id to not fetch data
+        //ignore fetch raw data when get
+        this.ignoreFetchFileFlagCache.add(this.getUniqueKey(object));
 
         return object;
     }
@@ -318,7 +326,8 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         var data = object.getData();
         this.writeOnStorage(data, object.getPath());
 
-        //TODO: flag make get id to not fetch data
+        //remove ignore fetch raw data when get
+        this.ignoreFetchFileFlagCache.remove(this.getUniqueKey(object));
         
         return object;
     }
@@ -331,29 +340,47 @@ public abstract class ObjectStorageService<T extends ObjectStorageData, I, D ext
         if (!this.isFileExist(input.getPath()))
             HttpResponseThrowers.throwBadRequest("File not found");
 
-        //TODO: flag make get id to not fetch data
+        //ignore fetch raw data when get
+        this.ignoreFetchFileFlagCache.add(this.getUniqueKey(input));
 
         return input;
     }
 
     @Override
     protected T processingPutOutput(I id, T output) {
-        //TODO: flag make get id to not fetch data
+        //remove ignore fetch raw data when get
+        this.ignoreFetchFileFlagCache.remove(this.getUniqueKey(output));
 
         return super.processingPutOutput(id, output);
     }
 
     @Override
     protected T processingPatchInput(I id, T input) {
-        //TODO: flag make get id to not fetch data
+        //ignore fetch raw data when get
+        this.ignoreFetchFileFlagCache.add(this.getUniqueKey(input));
 
         return super.processingPatchInput(id, input);
     }
 
     @Override
     protected T processingPatchOutput(I id, T output) {
-        //TODO: flag make get id to not fetch data
+        //remove ignore fetch raw data when get
+        this.ignoreFetchFileFlagCache.remove(this.getUniqueKey(output));
 
         return super.processingPatchOutput(id, output);
+    }
+
+    protected T getUniqueKey(T fileMetaData) {
+        var temp = this.newEmptyObject();
+        temp.setOriginalFilename(fileMetaData.getOriginalFilename());
+        temp.setPath(fileMetaData.getPath());
+        return temp;
+    }
+
+    private String formatPath(String path) {
+        path = path.replace("\\", "/");
+        path = path.replace("/+", "/").replaceAll("/$", "");
+        path = path.startsWith("/") ? path : String.format("/%s", path);
+        return path;
     }
 }

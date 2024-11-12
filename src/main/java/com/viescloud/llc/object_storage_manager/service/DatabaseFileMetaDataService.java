@@ -7,17 +7,17 @@ import com.viescloud.llc.object_storage_manager.dao.DatabaseFileDao;
 import com.viescloud.llc.object_storage_manager.dao.DatabaseFileMetaDataDao;
 import com.viescloud.llc.object_storage_manager.model.DatabaseFile;
 import com.viescloud.llc.object_storage_manager.model.DatabaseFileMetaData;
-import com.viescloud.llc.viesspringutils.util.DatabaseCall;
+import com.viescloud.llc.viesspringutils.repository.DatabaseCall;
 
 @Service
-public class DatabaseFileMetaDataService extends ObjectStorageService<DatabaseFileMetaData, Integer, DatabaseFileMetaDataDao> {
+public class DatabaseFileMetaDataService extends ObjectStorageService<Integer, DatabaseFileMetaData, DatabaseFileMetaDataDao> {
 
     @Autowired
     private DatabaseFileDao databaseFileDao;
 
-    public DatabaseFileMetaDataService(DatabaseCall<DatabaseFileMetaData, Integer> databaseCall,
-            DatabaseFileMetaDataDao repositoryDao, DatabaseCall<Boolean, String> fetchFileFlagCache) {
-        super(databaseCall, repositoryDao, fetchFileFlagCache);
+    public DatabaseFileMetaDataService(DatabaseCall<Integer, DatabaseFileMetaData> databaseCall,
+            DatabaseFileMetaDataDao repositoryDao) {
+        super(databaseCall, repositoryDao);
     }
 
     @Override

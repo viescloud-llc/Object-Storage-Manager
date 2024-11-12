@@ -8,18 +8,19 @@ import org.springframework.stereotype.Service;
 import com.viescloud.llc.object_storage_manager.dao.SmbFileMetaDataDao;
 import com.viescloud.llc.object_storage_manager.model.SmbFileMetaData;
 import com.viescloud.llc.viesspringutils.exception.HttpResponseThrowers;
-import com.viescloud.llc.viesspringutils.util.DatabaseCall;
+import com.viescloud.llc.viesspringutils.repository.DatabaseCall;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class SmbFileMetaDataService extends ObjectStorageService<SmbFileMetaData, Integer, SmbFileMetaDataDao> {
+public class SmbFileMetaDataService extends ObjectStorageService<Integer, SmbFileMetaData, SmbFileMetaDataDao> {
 
     private final SmbSession smbSession;
 
-    public SmbFileMetaDataService(DatabaseCall<SmbFileMetaData, Integer> databaseCall, SmbFileMetaDataDao repositoryDao,
-            SmbSessionFactory smbSessionFactory, DatabaseCall<Boolean, String> fetchFileFlagCache) {
-        super(databaseCall, repositoryDao, fetchFileFlagCache);
+    public SmbFileMetaDataService(DatabaseCall<Integer, SmbFileMetaData> databaseCall, SmbFileMetaDataDao repositoryDao,
+            SmbSessionFactory smbSessionFactory) {
+        super(databaseCall, repositoryDao);
         this.smbSession = smbSessionFactory.getSession();
     }
 

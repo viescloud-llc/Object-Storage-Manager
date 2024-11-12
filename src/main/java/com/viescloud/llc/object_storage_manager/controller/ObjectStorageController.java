@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @Slf4j
-public abstract class ObjectStorageController<T extends ObjectStorageData, I, S extends ObjectStorageService<T, I, ?>> {
+public abstract class ObjectStorageController<I, T extends ObjectStorageData, S extends ObjectStorageService<I, T, ?>> {
     protected static final Map<String, VideoFormats> VIDEO_FORMATS = Map.of(
         "mp4", VideoFormats.MP4,
         "mkv", VideoFormats.MKV,
@@ -52,10 +52,10 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
         "jpeg", ImageFormats.JPEG
     );
 
-    protected ObjectStorageService<T, I, ?> objectStorageService;
+    protected ObjectStorageService<I, T, ?> objectStorageService;
     protected IVCompressor compressor;
 
-    public ObjectStorageController(ObjectStorageService<T, I, ?> objectStorageService) { 
+    public ObjectStorageController(ObjectStorageService<I, T, ?> objectStorageService) { 
         this.objectStorageService = objectStorageService;
         this.compressor = new IVCompressor();
     }
@@ -64,7 +64,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
 
     @GetMapping("file")
     @SuppressWarnings("unchecked")
-    public ResponseEntity<byte[]> getFileById(
+    public ResponseEntity<byte[]> getFileByCriteria(
             @RequestHeader(required = false, defaultValue = "0") Integer user_id,
             @RequestParam(required = false) String path,
             @RequestParam(required = false) String fileName,
@@ -164,7 +164,7 @@ public abstract class ObjectStorageController<T extends ObjectStorageData, I, S 
 
     @SuppressWarnings("unchecked")
     @GetMapping("metadata")
-    public T getMetadata(
+    public T getMetadataByCriteria(
             @RequestHeader(required = false) Integer user_id,
             @RequestParam(required = false) String path,
             @RequestParam(required = false) String fileName,

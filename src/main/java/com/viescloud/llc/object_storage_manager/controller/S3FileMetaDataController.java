@@ -13,9 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 @RequestMapping("/s3/v1")
-public class S3FileMetaDataController extends ObjectStorageController<S3FileMetaData, Integer, S3FileMetaDataService> {
+public class S3FileMetaDataController extends ObjectStorageController<Integer, S3FileMetaData, S3FileMetaDataService> {
 
-    public S3FileMetaDataController(ObjectStorageService<S3FileMetaData, Integer, ?> objectStorageService) {
+    public S3FileMetaDataController(ObjectStorageService<Integer, S3FileMetaData, ?> objectStorageService) {
         super(objectStorageService);
     }
 

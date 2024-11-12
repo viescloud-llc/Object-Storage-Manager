@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.viescloud.llc.object_storage_manager.dao.S3FileMetaDataDao;
 import com.viescloud.llc.object_storage_manager.model.S3FileMetaData;
 import com.viescloud.llc.viesspringutils.exception.HttpResponseThrowers;
-import com.viescloud.llc.viesspringutils.util.DatabaseCall;
+import com.viescloud.llc.viesspringutils.repository.DatabaseCall;
 
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
@@ -31,8 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class S3FileMetaDataService extends ObjectStorageService<S3FileMetaData, Integer, S3FileMetaDataDao> {
-
+public class S3FileMetaDataService extends ObjectStorageService<Integer, S3FileMetaData, S3FileMetaDataDao> {
     
     @Autowired
     private MinioClient minioClient;
@@ -40,10 +39,9 @@ public class S3FileMetaDataService extends ObjectStorageService<S3FileMetaData, 
     @Value("${minio.s3.bucket}") 
     private String bucket;
 
-    public S3FileMetaDataService(DatabaseCall<S3FileMetaData, Integer> databaseCall, S3FileMetaDataDao repositoryDao, DatabaseCall<Boolean, String> fetchFileFlagCache) {
-        super(databaseCall, repositoryDao, fetchFileFlagCache);
+    public S3FileMetaDataService(DatabaseCall<Integer, S3FileMetaData> databaseCall, S3FileMetaDataDao repositoryDao) {
+        super(databaseCall, repositoryDao);
     }
-
 
     @Override
     protected S3FileMetaData newEmptyObject() {

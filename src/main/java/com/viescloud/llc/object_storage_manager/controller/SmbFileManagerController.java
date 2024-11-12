@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Slf4j
 @RestController
 @RequestMapping("smb/v1")
-public class SmbFileManagerController extends ObjectStorageController<SmbFileMetaData, Integer, SmbFileMetaDataService> {
+public class SmbFileManagerController extends ObjectStorageController<Integer, SmbFileMetaData, SmbFileMetaDataService> {
     
-    public SmbFileManagerController(ObjectStorageService<SmbFileMetaData, Integer, ?> objectStorageService) {
+    public SmbFileManagerController(ObjectStorageService<Integer, SmbFileMetaData, ?> objectStorageService) {
         super(objectStorageService);
     }
 
