@@ -70,14 +70,11 @@ public abstract class ObjectStorageService<I, T extends ObjectStorageData, D ext
     }
 
     public T getFileMetaDataByPath(String path) {
-        var metadatas = this.repositoryDao.findAllByPath(path);
-
-        for (var metadata : metadatas) {
-            if (metadata.getPath().equals(path))
-                return metadata;
-        }
-
-        return null;
+        return this.repositoryDao.findAllByPath(path)
+                                 .parallelStream()
+                                 .filter(metadata -> metadata.getPath().equals(path))
+                                 .findFirst()
+                                 .orElse(null);
     }
 
     @SuppressWarnings("unchecked")
@@ -98,7 +95,7 @@ public abstract class ObjectStorageService<I, T extends ObjectStorageData, D ext
     }
 
     public T getFileMetaDataByPath(String path, int userId) {
-        path = formatPath(path);
+        path = this.formatPath(path);
         return getFileMetaDataByPathWithTry(path, userId, 0);
     }
 
@@ -107,7 +104,6 @@ public abstract class ObjectStorageService<I, T extends ObjectStorageData, D ext
     }
 
     public T getFileByPath(String path) {
-        path = formatPath(path);
         var metadata = this.getFileMetaDataByPath(path);
         return ObjectUtils.isEmpty(metadata) ? null : this.processingGetOutput(metadata);
     }
@@ -117,7 +113,6 @@ public abstract class ObjectStorageService<I, T extends ObjectStorageData, D ext
     }
 
     private T getFileByPathWithTry(String path, int userId, int numTry) {
-        path = formatPath(path);
         var metadata = this.getFileMetaDataByPathWithTry(path, userId, numTry);
         return ObjectUtils.isEmpty(metadata) ? null : this.processingGetOutput(metadata);
     }
@@ -225,7 +220,7 @@ public abstract class ObjectStorageService<I, T extends ObjectStorageData, D ext
     public boolean isFileExist(String path) {
         var exist = this.isFileExistOnStorage(path);
 
-        if (exist) {
+        if (exist && this.getFileMetaDataByPath(path) != null) {
             var data = this.readRawOnStorage(path);
             var contentType = this.getContentTypeFromPath(path);
             var fileName = this.getFileNameFromPath(path);
@@ -378,9 +373,25 @@ public abstract class ObjectStorageService<I, T extends ObjectStorageData, D ext
     }
 
     private String formatPath(String path) {
-        path = path.replace("\\", "/");
-        path = path.replace("/+", "/").replaceAll("/$", "");
+        // Replace all backslashes with forward slashes
+        if (path.contains("\\")) {
+            path = path.replaceAll("\\\\", "/"); // Use "\\\\" to match a literal backslash
+        }
+
+        // Replace multiple slashes with a single slash and remove trailing slash if any
+        path = path.replaceAll("/+", "/").replaceAll("/$", "");
+
+        // Ensure the path starts with a single leading slash
         path = path.startsWith("/") ? path : String.format("/%s", path);
+
         return path;
+    }
+
+    public T formatMetaData(T fileMetaData) {
+        fileMetaData.setPath(this.formatPath(fileMetaData.getPath()));
+        var fileName = this.formatPath(fileMetaData.getOriginalFilename());
+        fileName = this.getFileNameFromPath(fileName);
+        fileMetaData.setOriginalFilename(fileName);
+        return fileMetaData;
     }
 }

@@ -20,16 +20,16 @@ import lombok.experimental.SuperBuilder;
 @MappedSuperclass
 @SuperBuilder
 public abstract class ObjectStorageData extends UserAccess implements AutoCloseable  {
-    @Column
+    @Column(length = 1000)
     private String originalFilename;
     
-    @Column
+    @Column(length = 100)
     private String contentType;
     
     @Column
     private Long size;
     
-    @Column(unique = true)
+    @Column(columnDefinition = "VARCHAR(1000)")
     private String path;
 
     @Column(columnDefinition = "BIT(1) default false")

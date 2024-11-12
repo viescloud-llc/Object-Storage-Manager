@@ -20,7 +20,7 @@ public class DatabaseFile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(unique = true)
+    @Column(columnDefinition = "VARCHAR(1000)")
     private String path;
 
     @Column(columnDefinition = "LONGBLOB")

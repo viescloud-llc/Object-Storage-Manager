@@ -31,7 +31,7 @@ public class DatabaseFileMetaDataController extends ObjectStorageController<Inte
                            .data(data)
                            .build();
 
-        return metaData;
+        return this.objectStorageService.formatMetaData(metaData);
     }
     
 }

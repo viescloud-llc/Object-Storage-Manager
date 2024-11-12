@@ -103,7 +103,7 @@ class ObjectStorageManagerApplicationTests {
 
         MultipartFile mockFile = new MockMultipartFile(
             "file",                            // Name of the form field
-            "/Wrap/generalSetting.json",                     // Original file name
+            "///Wrap/\\generalSetting.json",                     // Original file name
             "application/json",                       // Content type
             data.getBytes()                         // File content as byte array
         );
@@ -113,6 +113,38 @@ class ObjectStorageManagerApplicationTests {
         assertNotNull(response);
 
         var response2 = this.s3FileMetaDataController.getFileByCriteria(-1, null, "Wrap/generalSetting.json", null, null, null, null, null, null);
+        assertNotNull(response2);
+        assertTrue(response2.getStatusCode().is2xxSuccessful());
+        assertNotNull(response2.getBody());
+    }
+
+    // @Test
+    public void test3() throws IOException {
+        test2();
+
+        var data = WebCall.of(restTemplate, String.class)
+        .skipRestClientError(true)
+        .logRequest(true)
+        .request(HttpMethod.GET, "http://10.24.24.2:8385/public/json/test1.json")
+        .exchange()
+        .logResponseInFormat()
+        .getOptionalResponseBody()
+        .orElse(null);
+
+        assertNotNull(data);
+
+        MultipartFile mockFile = new MockMultipartFile(
+        "file",                            // Name of the form field
+        "wrap///generalSetting.json",                     // Original file name
+        "application/json",                       // Content type
+        data.getBytes()                         // File content as byte array
+        );
+
+        var response = this.s3FileMetaDataController.uploadFile(-1, mockFile, false);
+
+        assertNotNull(response);
+
+        var response2 = this.s3FileMetaDataController.getFileByCriteria(-1, null, "wrap/generalSetting.json", null, null, null, null, null, null);
         assertNotNull(response2);
         assertTrue(response2.getStatusCode().is2xxSuccessful());
         assertNotNull(response2.getBody());

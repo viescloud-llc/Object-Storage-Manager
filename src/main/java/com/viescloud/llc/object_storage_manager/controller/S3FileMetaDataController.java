@@ -31,7 +31,7 @@ public class S3FileMetaDataController extends ObjectStorageController<Integer, S
                            .data(data)
                            .build();
 
-        return metaData;
+        return this.objectStorageService.formatMetaData(metaData);
     }
 
 }
