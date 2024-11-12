@@ -79,8 +79,8 @@ public abstract class ObjectStorageService<I, T extends ObjectStorageData, D ext
 
     @SuppressWarnings("unchecked")
     private T getFileMetaDataByPathWithTry(String path, int userId, int numTry) {
-        if (numTry >= 20)
-            return (T) HttpResponseThrowers.throwServerError("Server experience unknown error when get by criteria");
+        if (numTry >= 10)
+            return (T) HttpResponseThrowers.throwNotFound("File not found");
 
         var metadata = this.getFileMetaDataByPath(path);
 
