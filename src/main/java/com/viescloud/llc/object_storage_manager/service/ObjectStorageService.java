@@ -219,8 +219,9 @@ public abstract class ObjectStorageService<I, T extends ObjectStorageData, D ext
 
     public boolean isFileExist(String path) {
         var exist = this.isFileExistOnStorage(path);
+        var metaData = this.getFileMetaDataByPath(path);
 
-        if (exist && this.getFileMetaDataByPath(path) == null) {
+        if (exist && metaData == null) {
             var data = this.readRawOnStorage(path);
             var contentType = this.getContentTypeFromPath(path);
             var fileName = this.getFileNameFromPath(path);
@@ -234,6 +235,9 @@ public abstract class ObjectStorageService<I, T extends ObjectStorageData, D ext
             metadata.setSize(size);
             metadata.setOwnerUserId(userId);
             this.databaseCall.saveAndExpire(metadata);
+        }
+        else if (!exist && metaData != null) {
+            this.delete(metaData);
         }
 
         return exist;
